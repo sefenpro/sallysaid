@@ -1,98 +1,912 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>منصة المدرسة</title>
-  <style>
-    body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; }
-    input, button { margin: 5px; padding: 8px; }
-    ul { list-style: none; padding: 0; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة التعليم الإلكتروني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        
+        .student-dashboard {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+        
+        .teacher-dashboard {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+        }
+        
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .grade-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .video-thumbnail::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            content: '\f04b';
+            color: #3182ce;
+            font-size: 24px;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
 </head>
 <body>
-  <h1>📚 منصة المدرسة</h1>
+    <!-- Main Container -->
+    <div class="min-h-screen overflow-hidden" id="app">
+        <!-- Login Screen (Initial View) -->
+        <div class="min-h-screen flex flex-col justify-center items-center bg-gray-50" id="loginScreen">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+                <div class="text-center">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/0371b55b-3bf1-4271-be75-84bffd4506b0.png" alt="شعار المدرسة - صورة رمزية تمثل منصة التعليم الرقمية بلون أزرق فاتح مع كتاب وصولجان العلم" class="mx-auto h-24 w-24 rounded-full">
+                    <h2 class="mt-4 text-2xl font-bold text-gray-900">منصة التعليم الإلكتروني</h2>
+                    <p class="mt-2 text-gray-600">سجل الدخول باستخدام كود الطالب أو المعلم</p>
+                </div>
+                
+                <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
+                    <div class="rounded-md shadow-sm space-y-4">
+                        <div>
+                            <label for="code" class="block text-sm font-medium text-gray-700 mb-2">كود المستخدم</label>
+                            <input id="code" name="code" type="text" required class="relative block w-full px-4 py-3 border border-gray-300 rounded-lg focus:z-10 focus:border-blue-500 focus:ring-blue-500" placeholder="أدخل الكود الخاص بك">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                                <i class="fas fa-sign-in-alt"></i>
+                            </span>
+                            تسجيل الدخول
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Student Dashboard (Hidden Initially) -->
+        <div class="hidden" id="studentDashboard">
+            <div class="student-dashboard min-h-screen">
+                <!-- Header -->
+                <header class="bg-white bg-opacity-90 shadow-sm">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between items-center py-4">
+                            <div class="flex items-center space-x-4">
+                                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/446e0e8d-5e9b-4918-a3b3-0bc8f0947503.png" alt="صورة الطالب الشخصية - طالب شاب يرتدي الزي المدرسي يبتسم، خلفية زرقاء فاتحة" class="h-10 w-10 rounded-full object-cover">
+                                <div>
+                                    <h1 class="text-lg font-bold text-gray-800" id="studentName">محمد أحمد</h1>
+                                    <p class="text-xs text-gray-500" id="studentClass">الصف الثاني - المجموعة أ</p>
+                                </div>
+                            </div>
+                            <button @click="logout" class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Main Content -->
+                <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <!-- Greeting Card -->
+                    <div class="bg-white rounded-xl p-6 shadow mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2">مرحبًا بعودتك، <span id="greetingName">محمد</span>!</h2>
+                        <p class="text-gray-600">هذه هي أحدث المواد المتاحة لك هذا الأسبوع</p>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white rounded-lg shadow p-4 flex items-center">
+                            <div class="grade-icon bg-blue-100 text-blue-600 mr-3">
+                                <i class="fas fa-award"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">معدلك الحالي</p>
+                                <p class="text-lg font-bold" id="studentGrade">92.5%</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4 flex items-center">
+                            <div class="grade-icon bg-green-100 text-green-600 mr-3">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">الاختبارات المكتملة</p>
+                                <p class="text-lg font-bold" id="completedTests">8/12</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4 flex items-center">
+                            <div class="grade-icon bg-yellow-100 text-yellow-600 mr-3">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">الدروس المشاهدة</p>
+                                <p class="text-lg font-bold" id="watchedLessons">24</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Courses Section -->
+                    <h2 class="text-xl font-bold text-white mb-4">الدروس والمواد الدراسية</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Course Card 1 -->
+                        <div class="bg-white content-card rounded-xl shadow overflow-hidden transition-all duration-300">
+                            <div class="video-thumbnail" style="background-image: url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/619ae5f7-8410-41d3-ac70-2d262bbd800c.png');" alt="فيديو الرياضيات - معادلات جبرية معقدة مكتوبة على لوح أخضر مع معلم يشرح" onclick="openVideo('math1')"></div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-bold text-lg text-gray-800">الرياضيات: الجبر</h3>
+                                        <p class="text-sm text-gray-500">الصف الثاني - الأسبوع الثالث</p>
+                                    </div>
+                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">جديد</span>
+                                </div>
+                                <div class="mt-3 flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    <span>45 دقيقة</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Course Card 2 -->
+                        <div class="bg-white content-card rounded-xl shadow overflow-hidden transition-all duration-300">
+                            <div class="video-thumbnail" style="background-image: url('https://placehold.co/600x400');" alt="فيديو العلوم - تجربة كيميائية في المختبر مع رغوة ملونة" onclick="openVideo('science1')"></div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-bold text-lg text-gray-800">العلوم: التفاعلات الكيميائية</h3>
+                                        <p class="text-sm text-gray-500">الصف الثاني - الأسبوع الثاني</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    <span>32 دقيقة</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Course Card 3 -->
+                        <div class="bg-white content-card rounded-xl shadow overflow-hidden transition-all duration-300">
+                            <div class="video-thumbnail" style="background-image: url('https://placehold.co/600x400');" alt="فيديو اللغة العربية - قصيدة شعرية مكتوبة بخط جميل مع قراءة صوتية" onclick="openVideo('arabic1')"></div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-bold text-lg text-gray-800">اللغة العربية: النصوص الشعرية</h3>
+                                        <p class="text-sm text-gray-500">الصف الثاني - الأسبوع الأول</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    <span>28 دقيقة</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quizzes Section -->
+                    <h2 class="text-xl font-bold text-white mb-4">اختباراتي</h2>
+                    <div class="bg-white rounded-xl shadow overflow-hidden mb-8">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاختبار</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الدرجة</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">الوحدة الأولى</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">الرياضيات</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">95%</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">مكتمل</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15/03/2023</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">الوحدة الثانية</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">العلوم</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">88%</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">مكتمل</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">22/03/2023</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">الوحدة الثالثة</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">اللغة العربية</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">72%</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">مكتمل</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">05/04/2023</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+        
+        <!-- Teacher Dashboard (Hidden Initially) -->
+        <div class="hidden" id="teacherDashboard">
+            <div class="teacher-dashboard min-h-screen">
+                <!-- Header -->
+                <header class="bg-white bg-opacity-90 shadow-sm">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between items-center py-4">
+                            <div class="flex items-center space-x-4">
+                                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/622d8d48-58ff-42d5-9014-d1eb55371e38.png" alt="صورة المعلم الشخصية - معلم محترم يرتدي بدلة رسمية وقبعة التخرج بخلفية أرجوانية" class="h-10 w-10 rounded-full object-cover">
+                                <div>
+                                    <h1 class="text-lg font-bold text-gray-800" id="teacherName">أستاذ علي محمد</h1>
+                                    <p class="text-xs text-gray-500">معلم الصف الثاني</p>
+                                </div>
+                            </div>
+                            <button @click="logout" class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Main Content -->
+                <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <!-- Greeting Card -->
+                    <div class="bg-white rounded-xl p-6 shadow mb-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 mb-2">مرحبًا بك، <span id="teacherGreetingName">أستاذ علي</span>!</h2>
+                                <p class="text-gray-600">إحصائيات الفصل والطلاب لهذا الأسبوع</p>
+                            </div>
+                            <button @click="showAddContentModal = true" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                                <i class="fas fa-plus mr-2"></i> إضافة محتوى جديد
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-sm text-gray-500">عدد الطلاب</p>
+                            <p class="text-2xl font-bold" id="totalStudents">24</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-sm text-gray-500">المحتوى المرفوع</p>
+                            <p class="text-2xl font-bold" id="totalContent">18</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-sm text-gray-500">متوسط معدل الفصل</p>
+                            <p class="text-2xl font-bold" id="classAverage">85.6%</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-sm text-gray-500">الاختبارات المصححة</p>
+                            <p class="text-2xl font-bold" id="gradedTests">12/15</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabs Navigation -->
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex space-x-8">
+                            <button @click="teacherActiveTab = 'students'" :class="{ 'border-purple-500 text-purple-600': teacherActiveTab === 'students', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': teacherActiveTab !== 'students' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                الطلاب
+                            </button>
+                            <button @click="teacherActiveTab = 'content'" :class="{ 'border-purple-500 text-purple-600': teacherActiveTab === 'content', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': teacherActiveTab !== 'content' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                المحتوى التعليمي
+                            </button>
+                            <button @click="teacherActiveTab = 'grades'" :class="{ 'border-purple-500 text-purple-600': teacherActiveTab === 'grades', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': teacherActiveTab !== 'grades' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                الدرجات
+                            </button>
+                        </nav>
+                    </div>
+                    
+                    <!-- Students Tab -->
+                    <div class="bg-white rounded-xl shadow overflow-hidden mb-8" x-show="teacherActiveTab === 'students'">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-gray-900">قائمة الطلاب</h3>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input type="text" v-model="studentSearch" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" placeholder="ابحث عن طالب...">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">كود الطالب</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الصف</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المجموعة</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المعدل</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ST2023001</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/97168c17-41da-4cf6-ac5e-2ab75143d677.png" alt="صورة الطالب الأول - طالب جاد المظهر يرتدي الزي المدرسي الرسمي">
+                                                </div>
+                                                <div class="mr-4">
+                                                    <div class="text-sm font-medium text-gray-900">محمد أحمد</div>
+                                                    <div class="text-sm text-gray-500">mohamed@school.edu</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">الصف الثاني</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">أ</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">95.2%</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a href="#" class="text-purple-600 hover:text-purple-900 ml-3">التفاصيل</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ST2023002</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/da1056b5-5878-471c-b78e-a35f56ffc0c6.png" alt="صورة الطالبة الثانية - طالبة مبتسمة تضع نظارات ولديها شعر مربوط على شكل ذيل حصان">
+                                                </div>
+                                                <div class="mr-4">
+                                                    <div class="text-sm font-medium text-gray-900">سارة محمد</div>
+                                                    <div class="text-sm text-gray-500">sara@school.edu</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">الصف الثاني</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ب</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">88.7%</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a href="#" class="text-purple-600 hover:text-purple-900 ml-3">التفاصيل</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ST2023003</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c7725c80-1b71-46fc-bab0-fa0b780433a7.png" alt="صورة الطالب الثالث - طالب صغير يرتدي الزي المدرسي ويحمل حقيبة ظهر كبيرة">
+                                                </div>
+                                                <div class="mr-4">
+                                                    <div class="text-sm font-medium text-gray-900">أحمد خالد</div>
+                                                    <div class="text-sm text-gray-500">ahmed@school.edu</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">الصف الأول</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">أ</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">76.5%</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a href="#" class="text-purple-600 hover:text-purple-900 ml-3">التفاصيل</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Content Tab -->
+                    <div class="bg-white rounded-xl shadow overflow-hidden mb-8" x-show="teacherActiveTab === 'content'">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">المحتوى التعليمي</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Video Content -->
+                                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                    <div class="video-thumbnail" style="background-image: url('https://placehold.co/600x400');" alt="فيديو الرياضيات - معادلات جبرية مكتوبة على لوح أبيض مع معلم يشرح"></div>
+                                    <div class="p-4">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h3 class="font-bold text-lg text-gray-800">الرياضيات: الجبر</h3>
+                                                <p class="text-sm text-gray-500">الصف الثاني</p>
+                                            </div>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">فيديو</span>
+                                        </div>
+                                        <div class="mt-3 flex justify-between">
+                                            <div class="flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-calendar-alt mr-1"></i>
+                                                <span>15/03/2023</span>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="text-blue-500 hover:text-blue-700">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="text-red-500 hover:text-red-700">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- PDF Content -->
+                                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                    <div class="bg-gray-100 h-48 flex items-center justify-center">
+                                        <i class="fas fa-file-pdf text-5xl text-red-500"></i>
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h3 class="font-bold text-lg text-gray-800">تدريبات العلوم</h3>
+                                                <p class="text-sm text-gray-500">الصف الأول</p>
+                                            </div>
+                                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">PDF</span>
+                                        </div>
+                                        <div class="mt-3 flex justify-between">
+                                            <div class="flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-calendar-alt mr-1"></i>
+                                                <span>22/03/2023</span>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="text-blue-500 hover:text-blue-700">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="text-red-500 hover:text-red-700">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Quiz Content -->
+                                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                    <div class="bg-gray-100 h-48 flex items-center justify-center">
+                                        <i class="fas fa-question-circle text-5xl text-purple-500"></i>
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h3 class="font-bold text-lg text-gray-800">اختبار الوحدة الثالثة</h3>
+                                                <p class="text-sm text-gray-500">الصف الثالث</p>
+                                            </div>
+                                            <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">اختبار</span>
+                                        </div>
+                                        <div class="mt-3 flex justify-between">
+                                            <div class="flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-calendar-alt mr-1"></i>
+                                                <span>05/04/2023</span>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="text-blue-500 hover:text-blue-700">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="text-red-500 hover:text-red-700">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Grades Tab -->
+                    <div class="bg-white rounded-xl shadow overflow-hidden mb-8" x-show="teacherActiveTab === 'grades'">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-gray-900">درجات الطلاب</h3>
+                            <div class="flex space-x-3">
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                                    <option>الصف الأول</option>
+                                    <option selected>الصف الثاني</option>
+                                    <option>الصف الثالث</option>
+                                </select>
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                                    <option>الاختبار الأول</option>
+                                    <option selected>الاختبار الثاني</option>
+                                    <option>الاختبار النهائي</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الدرجة</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التعليق</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/5d7cc0aa-db5d-469b-9364-8d44d821487e.png" alt="صورة الطالب الأول - طالب جاد المظهر يرتدي الزي المدرسي الرسمي">
+                                                </div>
+                                                <div class="mr-4">
+                                                    <div class="text-sm font-medium text-gray-900">محمد أحمد</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="number" class="block w-20 py-1 px-2 border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500" value="95">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <select class="block w-full pl-3 pr-10 py-1 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                                                <option>تم التصحيح</option>
+                                                <option>قيد المراجعة</option>
+                                                <option>لم يتم التصحيح</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <input type="text" class="block w-full px-2 py-1 border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500" placeholder="أدخل تعليقًا...">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a href="#" class="text-purple-600 hover:text-purple-900 ml-3">حفظ</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dd5b18b0-282b-4f49-b34c-bcbed723a95d.png" alt="صورة الطالبة الثانية - طالبة مبتسمة تضع نظارات ولديها شعر مربوط على شكل ذيل حصان">
+                                                </div>
+                                                <div class="mr-4">
+                                                    <div class="text-sm font-medium text-gray-900">سارة محمد</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="number" class="block w-20 py-1 px-2 border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500" value="88">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <select class="block w-full pl-3 pr-10 py-1 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                                                <option selected>تم التصحيح</option>
+                                                <option>قيد المراجعة</option>
+                                                <option>لم يتم التصحيح</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <input type="text" class="block w-full px-2 py-1 border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500" placeholder="أدخل تعليقًا..." value="أحسنتِ!">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a href="#" class="text-purple-600 hover:text-purple-900 ml-3">حفظ</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10">
+                                                    <img class="h-10 w-10 rounded-full" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/85319d1c-454b-489b-be66-3dfda91c4aa0.png" alt="صورة الطالب الثالث - طالب صغير يرتدي الزي المدرسي ويحمل حقيبة ظهر كبيرة">
+                                                </div>
+                                                <div class="mr-4">
+                                                    <div class="text-sm font-medium text-gray-900">أحمد خالد</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="number" class="block w-20 py-1 px-2 border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500" value="76">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <select class="block w-full pl-3 pr-10 py-1 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                                                <option>تم التصحيح</option>
+                                                <option selected>قيد المراجعة</option>
+                                                <option>لم يتم التصحيح</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <input type="text" class="block w-full px-2 py-1 border border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500" placeholder="أدخل تعليقًا...">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a href="#" class="text-purple-600 hover:text-purple-900 ml-3">حفظ</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+        
+        <!-- Video Modal (Hidden Initially) -->
+        <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg w-full max-w-4xl mx-4">
+                <div class="p-4 flex justify-between items-center border-b border-gray-200">
+                    <h3 class="text-lg font-medium" id="videoTitle">مشاهدة الفيديو التعليمي</h3>
+                    <button onclick="closeVideo()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="aspect-w-16 aspect-h-9">
+                        <!-- Video Player Placeholder -->
+                        <div class="w-full bg-black" style="height: 500px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-play text-white text-5xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-bold" id="currentVideoTitle">الرياضيات: الجبر</h4>
+                        <p class="text-gray-600 mt-2" id="videoDescription">درس الجبر للصف الثاني الثانوي، يتناول حل المعادلات من الدرجة الأولى بمجهول واحد.</p>
+                        <div class="flex items-center mt-4 space-x-4 text-sm text-gray-500">
+                            <span><i class="fas fa-clock mr-1"></i> 45 دقيقة</span>
+                            <span><i class="fas fa-calendar-alt mr-1"></i> 15/03/2023</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Content Modal -->
+        <div id="addContentModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg w-full max-w-2xl mx-4">
+                <div class="p-4 flex justify-between items-center border-b border-gray-200">
+                    <h3 class="text-lg font-medium">إضافة محتوى جديد</h3>
+                    <button onclick="closeAddContentModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">نوع المحتوى</label>
+                        <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                            <option>اختر نوع المحتوى</option>
+                            <option>فيديو</option>
+                            <option>صوت</option>
+                            <option>صورة</option>
+                            <option>ملف PDF</option>
+                            <option>اختبار</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">عنوان المحتوى</label>
+                        <input type="text" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" placeholder="أدخل عنوان المحتوى">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">الصف</label>
+                        <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md">
+                            <option>اختر الصف</option>
+                            <option>الصف الأول</option>
+                            <option>الصف الثاني</option>
+                            <option>الصف الثالث</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                        <textarea class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" rows="3" placeholder="أدخل وصفًا للمحتوى"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">رفع الملف</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <div class="flex text-sm text-gray-600">
+                                    <label class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                        <span>اختر ملف</span>
+                                        <input type="file" class="sr-only">
+                                    </label>
+                                    <p class="pr-1">أو اسحب الملف إلى هنا</p>
+                                </div>
+                                <p class="text-xs text-gray-500">MP4, MOV للفيديو أو MP3 للصوت أو PDF أو JPG, PNG للصور</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-4">
+                        <button type="button" onclick="closeAddContentModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            إلغاء
+                        </button>
+                        <button type="button" class="mr-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            حفظ المحتوى
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-  <!-- نموذج تسجيل الدخول -->
-  <h2>تسجيل الدخول</h2>
-  <form id="loginForm">
-    <input type="text" id="code" placeholder="كود الطالب/المعلم" required />
-    <input type="password" id="password" placeholder="كلمة المرور" required />
-    <button type="submit">تسجيل الدخول</button>
-  </form>
-
-  <div id="loginResult"></div>
-
-  <hr>
-
-  <!-- زرار عرض الطلاب -->
-  <h2>قائمة الطلاب</h2>
-  <button id="getStudentsBtn">عرض الطلاب</button>
-  <ul id="studentsList"></ul>
-
-  <script>
-    const API_BASE = "https://school-platform-backend-production.up.railway.app";
-
-    // تسجيل الدخول
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const code = document.getElementById("code").value;
-      const password = document.getElementById("password").value;
-
-      try {
-        const res = await fetch(`${API_BASE}/api/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, password })
-        });
-
-        const data = await res.json();
-        console.log("Login Response:", data);
-
-        if (res.ok) {
-          document.getElementById("loginResult").innerText = "✅ تسجيل الدخول ناجح";
-          // حفظ التوكن في localStorage
-          localStorage.setItem("token", data.token);
-        } else {
-          document.getElementById("loginResult").innerText = "❌ " + (data.error || "خطأ");
+    <!-- Vue.js for dynamic functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    <script>
+        const { createApp, ref } = Vue;
+        
+        createApp({
+            setup() {
+                // Login state
+                const isLoggedIn = ref(false);
+                const isTeacher = ref(false);
+                const loginError = ref('');
+                
+                // Teacher dashboard state
+                const teacherActiveTab = ref('students');
+                const studentSearch = ref('');
+                const showAddContentModal = ref(false);
+                
+                // Sample data - in a real app this would come from API
+                const students = [
+                    {
+                        id: 1,
+                        code: 'ST2023001',
+                        name: 'محمد أحمد',
+                        email: 'mohamed@school.edu',
+                        class: 'الصف الثاني',
+                        group: 'أ',
+                        grade: '95.2%'
+                    },
+                    {
+                        id: 2,
+                        code: 'ST2023002',
+                        name: 'سارة محمد',
+                        email: 'sara@school.edu',
+                        class: 'الصف الثاني',
+                        group: 'ب',
+                        grade: '88.7%'
+                    },
+                    {
+                        id: 3,
+                        code: 'ST2023003',
+                        name: 'أحمد خالد',
+                        email: 'ahmed@school.edu',
+                        class: 'الصف الأول',
+                        group: 'أ',
+                        grade: '76.5%'
+                    }
+                ];
+                
+                const contentItems = [
+                    {
+                        id: 1,
+                        title: 'الرياضيات: الجبر',
+                        class: 'الصف الثاني',
+                        type: 'فيديو',
+                        date: '15/03/2023'
+                    },
+                    {
+                        id: 2,
+                        title: 'تدريبات العلوم',
+                        class: 'الصف الأول',
+                        type: 'PDF',
+                        date: '22/03/2023'
+                    },
+                    {
+                        id: 3,
+                        title: 'اختبار الوحدة الثالثة',
+                        class: 'الصف الثالث',
+                        type: 'اختبار',
+                        date: '05/04/2023'
+                    }
+                ];
+                
+                // Login function
+                const handleLogin = () => {
+                    const code = document.getElementById('code').value.trim();
+                    
+                    // Simple validation - in real app would check against database
+                    if (code === '') {
+                        loginError.value = 'الرجاء إدخال كود المستخدم';
+                        return;
+                    }
+                    
+                    // Simulate authentication
+                    if (code.startsWith('T')) { // Teacher code
+                        isTeacher.value = true;
+                        isLoggedIn.value = true;
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('teacherDashboard').classList.remove('hidden');
+                    } else if (code.startsWith('S')) { // Student code
+                        isTeacher.value = false;
+                        isLoggedIn.value = true;
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('studentDashboard').classList.remove('hidden');
+                    } else {
+                        loginError.value = 'كود غير صحيح، الرجاء المحاولة مرة أخرى';
+                    }
+                };
+                
+                // Logout function
+                const logout = () => {
+                    isLoggedIn.value = false;
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('studentDashboard').classList.add('hidden');
+                    document.getElementById('teacherDashboard').classList.add('hidden');
+                    document.getElementById('code').value = '';
+                };
+                
+                return {
+                    isLoggedIn,
+                    isTeacher,
+                    loginError,
+                    handleLogin,
+                    logout,
+                    teacherActiveTab,
+                    studentSearch,
+                    students,
+                    contentItems,
+                    showAddContentModal
+                };
+            }
+        }).mount('#app');
+        
+        // Video modal functions
+        function openVideo(videoId) {
+            document.getElementById('videoModal').classList.remove('hidden');
+            // In a real app, you would load the video based on videoId
         }
-      } catch (err) {
-        console.error(err);
-        document.getElementById("loginResult").innerText = "⚠️ مشكلة في الاتصال بالسيرفر";
-      }
-    });
-
-    // جلب الطلاب
-    document.getElementById("getStudentsBtn").addEventListener("click", async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE}/api/students`, {
-          headers: {
-            "Authorization": token ? `Bearer ${token}` : ""
-          }
-        });
-
-        const students = await res.json();
-        console.log("Students Response:", students);
-
-        const list = document.getElementById("studentsList");
-        list.innerHTML = "";
-
-        if (Array.isArray(students)) {
-          students.forEach((s) => {
-            const li = document.createElement("li");
-            li.textContent = `${s.name} - ${s.class || "بدون فصل"}`;
-            list.appendChild(li);
-          });
-        } else {
-          list.innerHTML = "<li>⚠️ لم يتم جلب أي طلاب</li>";
+        
+        function closeVideo() {
+            document.getElementById('videoModal').classList.add('hidden');
         }
-      } catch (err) {
-        console.error(err);
-        alert("⚠️ مشكلة في الاتصال بالسيرفر");
-      }
-    });
-  </script>
+        
+        // Content modal functions
+        function openAddContentModal() {
+            document.getElementById('addContentModal').classList.remove('hidden');
+        }
+        
+        function closeAddContentModal() {
+            document.getElementById('addContentModal').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
+
