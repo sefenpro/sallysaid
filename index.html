@@ -769,6 +769,53 @@
     <!-- Vue.js for dynamic functionality -->
     <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
     <script>
+        const API_BASE = "https://school-platform-backend-production.up.railway.app";
+
+  // تسجيل الدخول
+  document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const code = document.getElementById("code").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch(`${API_BASE}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, password })
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    if (res.ok) {
+      alert("✅ تسجيل الدخول ناجح!");
+      localStorage.setItem("token", data.token); // نخزن التوكن
+    } else {
+      alert("❌ خطأ: " + data.error);
+    }
+  });
+
+  // عرض الطلاب
+  document.getElementById("getStudentsBtn")?.addEventListener("click", async () => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API_BASE}/api/students`, {
+      headers: {
+        "Authorization": token ? `Bearer ${token}` : ""
+      }
+    });
+
+    const students = await res.json();
+    console.log(students);
+
+    const list = document.getElementById("studentsList");
+    list.innerHTML = "";
+    students.forEach((s) => {
+      const li = document.createElement("li");
+      li.textContent = `${s.name} - ${s.class}`;
+      list.appendChild(li);
+    });
+  });
         const { createApp, ref } = Vue;
         
         createApp({
